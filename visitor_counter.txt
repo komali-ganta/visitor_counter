@@ -1,0 +1,78 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+// Initialize I2C LCD (address 0x27, 16 columns, 2 rows)
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// Define sensor and relay pins
+#define in A0       // IR sensor at entry
+#define out A5      // IR sensor at exit
+#define relay 2     // Relay to control light
+
+int count = 0;      // Number of people in the room
+
+void IN() {
+  count++;
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Person In Room:");
+  lcd.setCursor(0, 1);
+  lcd.print(count);
+  delay(1000);
+}
+
+void OUT() {
+  if (count > 0) {
+    count--;
+  }
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Person In Room:");
+  lcd.setCursor(0, 1);
+  lcd.print(count);
+  delay(1000);
+}
+
+void setup() {
+  lcd.init();              // Initialize the LCD
+  lcd.backlight();         // Turn on backlight
+
+  lcd.setCursor(0, 0);
+  lcd.print("Visitor Counter");
+  delay(2000);
+
+  pinMode(in, INPUT);
+  pinMode(out, INPUT);
+  pinMode(relay, OUTPUT);
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Person In Room:");
+  lcd.setCursor(0, 1);
+  lcd.print(count);
+}
+
+void loop() {
+  // Entry detection
+  if (digitalRead(in)) {
+    IN();
+  }
+
+  // Exit detection
+  if (digitalRead(out)) {
+    OUT();
+  }
+
+  // Light control
+  if (count <= 0) {
+    lcd.clear();
+    digitalWrite(relay, LOW);     // Turn OFF light
+    lcd.setCursor(0, 0);
+    lcd.print("Nobody In Room");
+    lcd.setCursor(0, 1);
+    lcd.print("Light is OFF");
+    delay(500);
+  } else {
+    digitalWrite(relay, HIGH);    // Turn ON light
+  }
+}
